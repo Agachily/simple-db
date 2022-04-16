@@ -49,6 +49,7 @@ public class RecordIdTest extends SimpleDbTestBase {
      * Unit test for RecordId.equals()
      */
     @Test public void equals() {
+        System.out.println(hrid.equals(hrid2));
     	assertEquals(hrid, hrid2);
     	assertEquals(hrid2, hrid);
         assertNotEquals(hrid, hrid3);
