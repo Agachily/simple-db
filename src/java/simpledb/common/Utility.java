@@ -160,5 +160,28 @@ public class Utility {
         }
         return out.toString();
     }
+
+    /**
+     * @return a byte array containing the contents of the file
+     */
+    public static byte[] readFileBytes(File f) throws IOException {
+        InputStream is = new FileInputStream(f);
+        byte[] buf = new byte[(int) f.length()];
+
+        int offset = 0;
+        int count = 0;
+        while (offset < buf.length
+                && (count = is.read(buf, offset, buf.length - offset)) >= 0) {
+            offset += count;
+        }
+
+        // check that we grabbed the entire file
+        if (offset < buf.length)
+            throw new IOException("failed to read test data");
+
+        // Close the input stream and return bytes
+        is.close();
+        return buf;
+    }
 }
 

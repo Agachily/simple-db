@@ -51,20 +51,13 @@ public class BufferPool {
      */
     public static final int DEFAULT_PAGES = 50;
 
-    public int getNumPages() {
-        return numPages;
-    }
-
-    public void setNumPages(int numPages) {
-        this.numPages = numPages;
-    }
-
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
+        this.numPages = numPages;
         pages = new HashMap<>(numPages);
     }
 
