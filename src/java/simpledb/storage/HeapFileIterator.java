@@ -25,7 +25,7 @@ public class HeapFileIterator implements  DbFileIterator{
         this.tableId = tableId;
         this.tid = tid;
         this.perm = perm;
-        this.pageNumber = pageNumber;
+        this.pageNumber = pageNumber; // 此处要减去一是因为pageNumber是从1开始计数的, 而currentPageNumber是从0开始的
         this.currentPageNumber = 0;
     }
 
@@ -54,7 +54,7 @@ public class HeapFileIterator implements  DbFileIterator{
         }
         if (iterator.hasNext()) {
             return true;
-        } else return currentPageNumber < (pageNumber - 1); // 此处要减去一是因为pageNumber是从1开始计数的, 而currentPageNumber是从0开始的
+        } else return currentPageNumber < pageNumber - 1;
     }
 
     @Override
@@ -75,6 +75,7 @@ public class HeapFileIterator implements  DbFileIterator{
 
     @Override
     public void rewind() throws DbException, TransactionAbortedException {
+        currentPageNumber = 0;
         open();
     }
 
