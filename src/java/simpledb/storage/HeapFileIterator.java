@@ -25,7 +25,7 @@ public class HeapFileIterator implements  DbFileIterator{
         this.tableId = tableId;
         this.tid = tid;
         this.perm = perm;
-        this.pageNumber = pageNumber; // 此处要减去一是因为pageNumber是从1开始计数的, 而currentPageNumber是从0开始的
+        this.pageNumber = pageNumber - 1; // 此处要减去一是因为pageNumber是从1开始计数的, 而currentPageNumber是从0开始的
         this.currentPageNumber = 0;
     }
 
@@ -43,6 +43,7 @@ public class HeapFileIterator implements  DbFileIterator{
 
     @Override
     public void open() throws DbException, TransactionAbortedException {
+        currentPageNumber = 0;
         page = obtainCurrentPage(tableId, tid, perm, currentPageNumber);
         iterator = ((HeapPage) page).iterator();
     }
@@ -54,7 +55,14 @@ public class HeapFileIterator implements  DbFileIterator{
         }
         if (iterator.hasNext()) {
             return true;
-        } else return currentPageNumber < pageNumber - 1;
+        } else if (currentPageNumber < pageNumber) {
+            // Update page and iterator
+            page = obtainCurrentPage(tableId, tid, perm, ++currentPageNumber);
+            iterator = ((HeapPage) page).iterator();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -62,20 +70,11 @@ public class HeapFileIterator implements  DbFileIterator{
         if (iterator == null) {
             throw new NoSuchElementException();
         }
-
-        if (iterator.hasNext()) {
-            return iterator.next();
-        } else if (currentPageNumber < pageNumber - 1) {
-            page = obtainCurrentPage(tableId, tid, perm, ++currentPageNumber);
-            iterator = ((HeapPage) page).iterator();
-            return iterator.next();
-        }
-        throw new NoSuchElementException();
+        return iterator.next();
     }
 
     @Override
     public void rewind() throws DbException, TransactionAbortedException {
-        currentPageNumber = 0;
         open();
     }
 

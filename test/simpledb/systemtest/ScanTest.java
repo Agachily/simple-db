@@ -57,14 +57,14 @@ public class ScanTest extends SimpleDbTestBase {
         TransactionId tid = new TransactionId();
         SeqScan scan = new SeqScan(tid, f.getId(), "table");
         scan.open();
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             assertTrue(scan.hasNext());
             Tuple t = scan.next();
             assertEquals(tuples.get(i), SystemTestUtil.tupleToList(t));
         }
 
         scan.rewind();
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             assertTrue(scan.hasNext());
             Tuple t = scan.next();
             assertEquals(tuples.get(i), SystemTestUtil.tupleToList(t));
