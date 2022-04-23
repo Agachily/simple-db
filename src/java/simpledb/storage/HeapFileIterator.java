@@ -57,7 +57,7 @@ public class HeapFileIterator implements  DbFileIterator{
             return true;
         } else if (currentPageNumber < pageNumber) {
             // Update page and iterator
-            page = obtainCurrentPage(tableId, tid, perm, ++currentPageNumber);
+            page = obtainCurrentPage(tableId, tid, perm, currentPageNumber++);
             iterator = ((HeapPage) page).iterator();
             return true;
         } else {
