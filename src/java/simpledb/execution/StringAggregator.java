@@ -1,12 +1,26 @@
 package simpledb.execution;
 
 import simpledb.common.Type;
+import simpledb.storage.Field;
 import simpledb.storage.Tuple;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Knows how to compute some aggregate over a set of StringFields.
  */
 public class StringAggregator implements Aggregator {
+    private int gbfield;
+    private Type gbfieldtype;
+    private int afield;
+    private Op what;
+    private String nameOfGbField;
+    private String nameOfAggField;
+    Map<Field, List<Field>> tmpResult;
+
 
     private static final long serialVersionUID = 1L;
 
@@ -20,7 +34,14 @@ public class StringAggregator implements Aggregator {
      */
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        if (what != Op.COUNT) {
+            throw new IllegalArgumentException();
+        }
+        this.gbfield = gbfield;
+        this.gbfieldtype = gbfieldtype;
+        this.afield = afield;
+        this.what = what;
+        tmpResult = new HashMap<>();
     }
 
     /**
@@ -28,7 +49,28 @@ public class StringAggregator implements Aggregator {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        Field groupByField = null;
+        Field aggField = tup.getField(afield);
+
+        if (nameOfAggField == null) {
+            nameOfAggField = tup.getTupleDesc().getFieldName(afield);
+        }
+
+        if (gbfield != NO_GROUPING) {
+            groupByField = tup.getField(gbfield);
+
+            if (nameOfGbField == null) {
+                nameOfGbField = tup.getTupleDesc().getFieldName(gbfield);
+            }
+        }
+
+        if (tmpResult.containsKey(groupByField)) {
+            tmpResult.get(groupByField).add(aggField);
+        } else {
+            List<Field> fields = new ArrayList<>();
+            fields.add(aggField);
+            tmpResult.put(groupByField, fields);
+        }
     }
 
     /**
@@ -40,8 +82,7 @@ public class StringAggregator implements Aggregator {
      *   aggregate specified in the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab2");
+        return new AggIterator(tmpResult, what, gbfield, gbfieldtype, nameOfGbField, nameOfAggField);
     }
 
 }

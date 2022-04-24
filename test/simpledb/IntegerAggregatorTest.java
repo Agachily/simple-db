@@ -13,6 +13,7 @@ import simpledb.common.Type;
 import simpledb.execution.Aggregator;
 import simpledb.execution.IntegerAggregator;
 import simpledb.execution.OpIterator;
+import simpledb.storage.TupleDesc;
 import simpledb.systemtest.SimpleDbTestBase;
 
 public class IntegerAggregatorTest extends SimpleDbTestBase {
@@ -79,6 +80,7 @@ public class IntegerAggregatorTest extends SimpleDbTestBase {
       OpIterator it = agg.iterator();
       it.open();
       TestUtil.matchAllTuples(TestUtil.createTupleList(width1, step), it);
+      TupleDesc tupleDesc = it.getTupleDesc();
     }
   }
 
