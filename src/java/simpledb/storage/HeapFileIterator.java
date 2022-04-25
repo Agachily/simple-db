@@ -18,14 +18,14 @@ public class HeapFileIterator implements  DbFileIterator{
     private Permissions perm;
     private int pageNumber;
     private int currentPageNumber;
-    private Page page;
+    private HeapPage page;
     Iterator<Tuple> iterator;
 
     HeapFileIterator(int tableId, TransactionId tid, Permissions perm, int pageNumber) {
         this.tableId = tableId;
         this.tid = tid;
         this.perm = perm;
-        this.pageNumber = pageNumber - 1; // 此处要减去一是因为pageNumber是从1开始计数的, 而currentPageNumber是从0开始的
+        this.pageNumber = pageNumber;
         this.currentPageNumber = 0;
     }
 
@@ -44,8 +44,9 @@ public class HeapFileIterator implements  DbFileIterator{
     @Override
     public void open() throws DbException, TransactionAbortedException {
         currentPageNumber = 0;
-        page = obtainCurrentPage(tableId, tid, perm, currentPageNumber);
-        iterator = ((HeapPage) page).iterator();
+        page = (HeapPage) obtainCurrentPage(tableId, tid, perm, currentPageNumber);
+        iterator = page.iterator();
+        currentPageNumber++;
     }
 
     @Override
@@ -55,12 +56,15 @@ public class HeapFileIterator implements  DbFileIterator{
         }
         if (iterator.hasNext()) {
             return true;
-        } else if (currentPageNumber < pageNumber) {
-            // Update page and iterator
-            page = obtainCurrentPage(tableId, tid, perm, currentPageNumber++);
-            iterator = ((HeapPage) page).iterator();
-            return true;
         } else {
+            for (int i = currentPageNumber; i < pageNumber; currentPageNumber++) {
+                page = (HeapPage) obtainCurrentPage(tableId, tid, perm, currentPageNumber);
+                if (page.iterator().hasNext()) {
+                    iterator = page.iterator();
+                    currentPageNumber++;
+                    return true;
+                }
+            }
             return false;
         }
     }

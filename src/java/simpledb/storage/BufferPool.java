@@ -1,18 +1,12 @@
 package simpledb.storage;
 
-import simpledb.common.Database;
-import simpledb.common.Permissions;
-import simpledb.common.DbException;
-import simpledb.common.DeadlockException;
+import simpledb.common.*;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -165,8 +159,13 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        Catalog catalog = Database.getCatalog();
+        DbFile databaseFile = catalog.getDatabaseFile(tableId);
+        List<Page> changedPages = databaseFile.insertTuple(tid, t);
+        for (Page p : changedPages) {
+            p.markDirty(true, tid);
+            pages.put(p.getId(), p);
+        }
     }
 
     /**
@@ -184,8 +183,13 @@ public class BufferPool {
      */
     public void deleteTuple(TransactionId tid, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        Catalog catalog = Database.getCatalog();
+        DbFile databaseFile = catalog.getDatabaseFile(t.getRecordId().getPageId().getTableId());
+        List<Page> changedPages = databaseFile.deleteTuple(tid, t);
+        for (Page p : changedPages) {
+            p.markDirty(true, tid);
+            pages.put(p.getId(), p);
+        }
     }
 
     /**

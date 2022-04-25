@@ -48,11 +48,13 @@ public class HeapPageReadTest extends SimpleDbTestBase {
     static {
         // Build the input table
         List<List<Integer>> table = new ArrayList<>();
+        // Get each line in the above matrix
         for (int[] tuple : EXAMPLE_VALUES) {
             List<Integer> listTuple = new ArrayList<>();
             for (int value : tuple) {
                 listTuple.add(value);
             }
+            // Convert the matrix to a nested list
             table.add(listTuple);
         }
 
