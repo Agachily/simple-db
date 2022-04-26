@@ -32,6 +32,11 @@ public class BufferPool {
     private Map<PageId, Page> pages;
 
     /**
+     * The time a page has been visited, used for evication
+     */
+    private Map<PageId, Integer> visitTimes;
+
+    /**
      * maximum number of pages in this buffer pool
      */
     private int numPages;
@@ -53,6 +58,7 @@ public class BufferPool {
     public BufferPool(int numPages) {
         this.numPages = numPages;
         pages = new HashMap<>(numPages);
+        visitTimes = new HashMap<>();
     }
 
     public static int getPageSize() {
@@ -88,11 +94,19 @@ public class BufferPool {
         Page page = pages.get(pid);
         if (page == null) {
             if (pages.size() == numPages) {
-                throw new TransactionAbortedException();
+                evictPage();
             }
             DbFile databaseFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
             page = databaseFile.readPage(pid);
+            visitTimes.put(pid, 1);
             pages.put(pid, page);
+        } else {
+            Integer currentTimes = visitTimes.get(pid);
+            if (visitTimes.get(pid) == null) {
+                visitTimes.put(pid, 1);
+            } else {
+                visitTimes.put(pid, ++currentTimes);
+            }
         }
         return page;
     }
@@ -198,9 +212,9 @@ public class BufferPool {
      * break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
-        // some code goes here
-        // not necessary for lab1
-
+        for(Page p : pages.values()){
+            flushPage(p.getId());
+        }
     }
 
     /**
@@ -213,8 +227,8 @@ public class BufferPool {
      * are removed from the cache so they can be reused safely
      */
     public synchronized void discardPage(PageId pid) {
-        // some code goes here
-        // not necessary for lab1
+        pages.remove(pid);
+        visitTimes.remove(pid);
     }
 
     /**
@@ -223,8 +237,16 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized void flushPage(PageId pid) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Page p = pages.get(pid);
+        TransactionId tid = null;
+        // flush it if it is dirty
+        if((tid = p.isDirty())!= null) {
+//            Database.getLogFile().logWrite(tid, p.getBeforeImage(), p);
+//            Database.getLogFile().force();
+            // write to disk
+            Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
+            p.markDirty(false, null);
+        }
     }
 
     /**
@@ -240,8 +262,23 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        ArrayList<PageId> pageIds = new ArrayList<>(visitTimes.keySet());
+        // Get rid of the page that has been least visit
+        PageId pageIdOfMinVisitPage = pageIds.get(0);
+        for (int i = 1; i < pageIds.size(); i++) {
+            PageId currentPageId = pageIds.get(i);
+            if (visitTimes.get(pageIdOfMinVisitPage) > visitTimes.get(currentPageId)) {
+                pageIdOfMinVisitPage = currentPageId;
+            }
+        }
+        // PageId pid = new ArrayList<>(pages.keySet()).get(0);
+        try {
+            flushPage(pageIdOfMinVisitPage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        discardPage(pageIdOfMinVisitPage);
     }
 
 }

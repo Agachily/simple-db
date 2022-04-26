@@ -24,10 +24,6 @@ public class Delete extends Operator {
     private TupleDesc td;
     private static BufferPool bufferPool;
 
-    static {
-        bufferPool = Database.getBufferPool();
-    }
-
     /**
      * Constructor specifying the transaction that this delete belongs to as
      * well as the child to read from.
@@ -38,6 +34,7 @@ public class Delete extends Operator {
      *            The child operator from which to read tuples for deletion
      */
     public Delete(TransactionId t, OpIterator child) {
+        bufferPool = Database.getBufferPool();
         this.t = t;
         this.child = child;
         td = new TupleDesc(new Type[]{Type.INT_TYPE});

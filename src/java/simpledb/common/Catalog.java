@@ -1,5 +1,6 @@
 package simpledb.common;
 
+import simpledb.common.Type;
 import simpledb.storage.DbFile;
 import simpledb.storage.HeapFile;
 import simpledb.storage.TupleDesc;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Catalog keeps track of all available tables in the database and their
@@ -16,20 +18,16 @@ import java.util.*;
  * For now, this is a stub catalog that must be populated with tables by a
  * user program before it can be used -- eventually, this should be converted
  * to a catalog that reads a catalog table from disk.
- * 
+ *
  * @Threadsafe
  */
 public class Catalog {
-    private List<Table> tables;
-    /**
-     * A help class that represents the table object in each database
-     */
-    public class Table {
-        private DbFile file;
-        private String name;
-        private String pkeyField;
-
-        public Table(DbFile file, String name, String pkeyField) {
+    private List<Mytable> mytables ;
+    public class Mytable{
+        DbFile file;
+        String name;
+        String pkeyField;
+        public Mytable(DbFile file, String name, String pkeyField) {
             this.file = file;
             this.name = name;
             this.pkeyField = pkeyField;
@@ -58,14 +56,23 @@ public class Catalog {
         public void setPkeyField(String pkeyField) {
             this.pkeyField = pkeyField;
         }
-    }
 
+        @Override
+        public String toString() {
+            return "Mytable{" +
+                    "file=" + file +
+                    ", name='" + name + '\'' +
+                    ", pkeyField='" + pkeyField + '\'' +
+                    '}';
+        }
+    }
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        tables = new ArrayList<>();
+        // some code goes here
+        mytables = new ArrayList<>();
     }
 
     /**
@@ -78,17 +85,19 @@ public class Catalog {
      * @param pkeyField the name of the primary key field
      */
     public void addTable(DbFile file, String name, String pkeyField) {
-        Table newTable = new Table(file, name, pkeyField);
-        for (var i = 0; i < tables.size(); i++) {
-            Table currentTable = this.tables.get(i);
-            if (currentTable.getName() == null) {
+        // some code goes here
+        Mytable mytable = new Mytable(file,name,pkeyField);
+        for (int i = 0; i < mytables.size(); i++) {
+            Mytable tmp = mytables.get(i);
+            if(tmp.getName() ==null){
                 continue;
             }
-            if (currentTable.getName().equals(name) || currentTable.getFile().getId() == file.getId()) {
-                tables.set(i, newTable);
+            if(tmp.getName().equals(name) || tmp.getFile().getId() == file.getId()){
+                mytables.set(i,mytable);
+                return;
             }
         }
-        tables.add(newTable);
+        mytables.add(mytable);
     }
 
     public void addTable(DbFile file, String name) {
@@ -111,16 +120,16 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
-        if (name == null) {
+        // some code goes here
+        if(name == null){
             throw new NoSuchElementException();
         }
-
-        for (Table t : tables) {
-            if (t.getName() == null) {
+        for (int i = 0; i < mytables.size(); i++) {
+            if(mytables.get(i).getName() == null){
                 continue;
             }
-            if (t.getName().equals(name)) {
-                return t.getFile().getId();
+            if(mytables.get(i).getName().equals(name)){
+                return mytables.get(i).getFile().getId();
             }
         }
         throw new NoSuchElementException();
@@ -133,9 +142,11 @@ public class Catalog {
      * @throws NoSuchElementException if the table doesn't exist
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
-        for (Table t : tables) {
-            if (t.getFile().getId() == tableid) {
-                return t.getFile().getTupleDesc();
+        // some code goes here
+        for (int i = 0; i < mytables.size(); i++) {
+            DbFile dbFile = mytables.get(i).getFile();
+            if(dbFile.getId() == tableid){
+                return dbFile.getTupleDesc();
             }
         }
         throw new NoSuchElementException();
@@ -148,45 +159,54 @@ public class Catalog {
      *     function passed to addTable
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
-        for (Table t : tables) {
-            if (t.getFile().getId() == tableid) {
-                return t.getFile();
+        // some code goes here
+        for (int i = 0; i < mytables.size(); i++) {
+
+            DbFile dbFile = mytables.get(i).getFile();
+            if(dbFile.getId() == tableid){
+                return dbFile;
             }
         }
         throw new NoSuchElementException();
     }
 
-    public String getPrimaryKey(int tableid) throws NoSuchElementException {
-        for (Table t : tables) {
-            if (t.getFile().getId() == tableid) {
-                return t.getPkeyField();
+    public String getPrimaryKey(int tableid) {
+        // some code goes here
+        for (int i = 0; i < mytables.size(); i++) {
+            DbFile dbFile = mytables.get(i).getFile();
+            if(dbFile.getId() == tableid){
+                return mytables.get(i).getPkeyField();
             }
         }
         throw new NoSuchElementException();
     }
 
     public Iterator<Integer> tableIdIterator() {
-        ArrayList<Integer> tableIdList = new ArrayList<>();
-        for (Table t : tables) {
-            tableIdList.add(t.getFile().getId());
+        // some code goes here
+        List<Integer> res = new ArrayList<>();
+        for (int i = 0; i < mytables.size(); i++) {
+            res.add(mytables.get(i).getFile().getId());
         }
-        return tableIdList.iterator();
+        return res.iterator();
     }
 
-    public String getTableName(int id) throws NoSuchElementException {
-        for (Table t : tables) {
-            if (t.getFile().getId() == id) {
-                return t.getName();
+    public String getTableName(int id) {
+        // some code goes here
+        for (int i = 0; i < mytables.size(); i++) {
+            DbFile dbFile = mytables.get(i).getFile();
+            if(dbFile.getId() == id){
+                return mytables.get(i).getName();
             }
         }
         throw new NoSuchElementException();
     }
-    
+
     /** Delete all tables from the catalog */
     public void clear() {
-        this.tables.clear();
+        // some code goes here
+        mytables.clear();
     }
-    
+
     /**
      * Reads the schema from a file and creates the appropriate tables in the database.
      * @param catalogFile
@@ -196,7 +216,7 @@ public class Catalog {
         String baseFolder=new File(new File(catalogFile).getAbsolutePath()).getParent();
         try {
             BufferedReader br = new BufferedReader(new FileReader(catalogFile));
-            
+
             while ((line = br.readLine()) != null) {
                 //assume line is of the format name (field type, field type, ...)
                 String name = line.substring(0, line.indexOf("(")).trim();

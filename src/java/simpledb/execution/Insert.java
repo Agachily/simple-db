@@ -27,11 +27,6 @@ public class Insert extends Operator {
 
     private static final long serialVersionUID = 1L;
 
-    static {
-        catalog = Database.getCatalog();
-        bufferPool = Database.getBufferPool();
-    }
-
     /**
      * Constructor.
      *
@@ -47,6 +42,8 @@ public class Insert extends Operator {
      */
     public Insert(TransactionId t, OpIterator child, int tableId)
             throws DbException {
+        catalog = Database.getCatalog();
+        bufferPool = Database.getBufferPool();
         TupleDesc targetTd = catalog.getTupleDesc(tableId);
         TupleDesc sourceTd = child.getTupleDesc();
         if (!sourceTd.equals(targetTd)) {
